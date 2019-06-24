@@ -3,7 +3,8 @@ E5		= "\345"
 CPMCP	=	/usr/bin/cpmcp
 CPMRM	=	/usr/bin/cpmrm
 CPFLAGS =	
-NEWDISK	=	printf '%*s' 256256 | tr ' ' $(E5) >
+#NEWDISK	=	printf '%*s' 256256 | tr ' ' $(E5) >
+NEWDISK	=	printf "%0.se5 " {1..256256} | xxd -r -p >
 DESKEW	=	./deskew.sh
 DISKS	=	A B C D E F G H I J K L M N O
 
@@ -11,7 +12,7 @@ DISKTARGETS=$(foreach DSK,$(DISKS), DISK_$(DSK).DSK )
 
 all : $(DISKTARGETS)
 
-define HANDLEUNDISK =
+define HANDLEUNDISK
 undisk$(1):
 	@echo "[UNDISK] $(1)"
 	@mkdir -p tmp
@@ -21,7 +22,7 @@ endef
 
 $(foreach DSK,$(DISKS),$(eval $(call HANDLEUNDISK,$(DSK))))
 
-define HANDLEDISK =
+define HANDLEDISK
 DISK_$(1).DSK: $(wildcard $(1)/*.*)
 	@echo "[MAKEDISK] DISK_$(1).DSK"
 	@$(NEWDISK) DISK_$(1).DSK
@@ -31,7 +32,7 @@ DISK_$(1).DSK: $(wildcard $(1)/*.*)
 	@touch DISK_$(1).DSK
 	@rm $(1)/DUMMY.FIL
 	@$(CPMRM) $(CPFLAGS) DISK_$(1).DSK 0:DUMMY.FIL
-	@$(DESKEW) DISK_$(1).DSK
+#	@$(DESKEW) DISK_$(1).DSK
 endef
 
 $(foreach DSK,$(DISKS),$(eval $(call HANDLEDISK,$(DSK))))

@@ -1,5 +1,5 @@
 ESPPORT		?= /dev/ttyUSB0
-ESP8266SDK	?= /Volumes/case-sensitive/esp-open-sdk/
+ESP8266SDK	?= /Volumes/case-sensitive/esp-open-sdk/xtensa-lx106-elf
 
 # Select WIFI for small memory CP/M machine with telnet over wifi access
 # or     NOSDK for 64K CP/M with serial access
@@ -43,7 +43,7 @@ XXD		=  /usr/bin/xxd
 ZIP		=  /usr/bin/zip
 DD		=  /bin/dd
 ESPTOOL		?= /opt/esptool/esptool.py
-BINS		=  $(ESP8266SDK)/xtensa-lx106-elf/bin
+BINS		=  $(ESP8266SDK)/bin
 SIZE		=  $(BINS)/xtensa-lx106-elf-size
 READELF		=  $(BINS)/xtensa-lx106-elf-readelf
 OBJDUMP		=  $(BINS)/xtensa-lx106-elf-objdump
@@ -55,6 +55,9 @@ DDFLAGS		= status=none bs=1 conv=notrunc
 
 CFLAGS		=  -std=c11 -DMAIN_MHZ=$(MAIN_MHZ) -DVERSION=$(VERSION) -DEMULATIONBAUD=$(EMULATIONBAUD) -DCPMMEMORY=$(CPMMEMORY) -DPORT=$(PORT)
 CFLAGS 		:= $(CFLAGS) -Iinclude -I./ -Os -mlongcalls
+ifdef EXINCLUDE
+CFLAGS 		:= $(CFLAGS) -I$(EXINCLUDE)
+endif
 
 ifeq (NOSDK, $(BUILD))
  CFLAGS		:= $(CFLAGS) -DNOSDK  -flto -mno-serialize-volatile
@@ -208,14 +211,14 @@ serialm :
 serials :
 	screen $(ESPPORT) $(EMULATIONBAUD)
 
-define WRITEDISK =
+define WRITEDISK
 writedisk$(1) :
 	@$(eval address := $(shell n=$$(printf "%d\n" \'$(1)); printf "0x%06x" $$(( $(4)-(($$n-65)*$(2)) )); ) )
 	@echo "[UPLOAD]" disks/DISK_$(1).DSK to $(address)
 	@$(ESPTOOL) -p $(ESPPORT) -b $(FLASHBAUD) write_flash $(address) disks/DISK_$(1).DSK > /dev/null
 endef
 
-define READDISK =
+define READDISK
 readdisk$(1) :
 	@$(eval address := $(shell n=$$(printf "%d\n" \'$(1)); printf "0x%06x" $$(( $(4)-(($$n-65)*$(2)) )); ) )
 	@echo "[DOWNLOAD]" disks/DISK_$(1).DSK from $(address)

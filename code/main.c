@@ -1,5 +1,4 @@
  #include "c_types.h"
- #include "os_type.h"
  #include "espincludes.h"
 #ifdef NOSDK
  #include "eagle_soc.h"
