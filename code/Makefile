@@ -218,6 +218,14 @@ writedisk$(1) :
 	@$(ESPTOOL) -p $(ESPPORT) -b $(FLASHBAUD) write_flash $(address) disks/DISK_$(1).DSK > /dev/null
 endef
 
+define ADDDISK
+	@echo "[ADDDISK]" disks/DISK_$(1).DSK to disks/DISK_ALL.DSK 
+	@cat disks/DISK_$(1).DSK disks/PAD disks/DISK_ALL.DSK > disks/DISK_ALL.tmp
+	@rm disks/DISK_ALL.DSK
+	@mv disks/DISK_ALL.tmp disks/DISK_ALL.DSK
+
+endef
+
 define READDISK
 readdisk$(1) :
 	@$(eval address := $(shell n=$$(printf "%d\n" \'$(1)); printf "0x%06x" $$(( $(4)-(($$n-65)*$(2)) )); ) )
@@ -237,9 +245,11 @@ READDISKTARGETS=$(foreach DSK,$(DISKS), readdisk$(DSK) )
 # This is work around for small data write error. Error message is this.
 # A fatal error occurred: Timed out waiting for packet header
 writealldisks :
-	@echo "[DOWNLOAD]" disks/DISK_ALL.DSK from 0x04e000
+	@rm -rf disks/DISK_ALL.DSK
+	@touch disks/DISK_ALL.DSK
 	@dd if=/dev/zero of=disks/PAD bs=1 count=1792
-	@cat disks/DISK_O.DSK disks/PAD disks/DISK_N.DSK disks/PAD disks/DISK_M.DSK disks/PAD disks/DISK_L.DSK disks/PAD disks/DISK_K.DSK disks/PAD disks/DISK_J.DSK disks/PAD disks/DISK_I.DSK disks/PAD disks/DISK_H.DSK disks/PAD disks/DISK_G.DSK disks/PAD disks/DISK_F.DSK disks/PAD disks/DISK_E.DSK disks/PAD disks/DISK_D.DSK disks/PAD disks/DISK_C.DSK disks/PAD disks/DISK_B.DSK disks/PAD disks/DISK_A.DSK > disks/DISK_ALL.DSK
+	$(foreach DSK,$(DISKS), $(call ADDDISK,$(DSK)))
+	@echo "[DOWNLOAD]" disks/DISK_ALL.DSK from 0x04e000
 	@$(ESPTOOL) -p $(ESPPORT) -b $(FLASHBAUD) write_flash 0x04e000 disks/DISK_ALL.DSK > /dev/null
 readalldisks  : $(READDISKTARGETS)
 
