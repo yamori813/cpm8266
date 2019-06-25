@@ -1,10 +1,8 @@
-E5		= "\345"
 
+NEWDISK	=	/usr/bin/mkfs.cpm
 CPMCP	=	/usr/bin/cpmcp
 CPMRM	=	/usr/bin/cpmrm
 CPFLAGS =	
-#NEWDISK	=	printf '%*s' 256256 | tr ' ' $(E5) >
-NEWDISK	=	printf "%0.se5 " {1..256256} | xxd -r -p >
 DESKEW	=	./deskew.sh
 DISKS	=	A B C D E F G H I J K L M N O
 
@@ -25,7 +23,7 @@ $(foreach DSK,$(DISKS),$(eval $(call HANDLEUNDISK,$(DSK))))
 define HANDLEDISK
 DISK_$(1).DSK: $(wildcard $(1)/*.*)
 	@echo "[MAKEDISK] DISK_$(1).DSK"
-	@$(NEWDISK) DISK_$(1).DSK
+	@$(NEWDISK) $(CPFLAGS) DISK_$(1).DSK
 	@touch -t 197001010000 DISK_$(1).DSK
 	@touch $(1)/DUMMY.FIL
 	@$(CPMCP) $(CPFLAGS) DISK_$(1).DSK $(1)/*.* 0:
